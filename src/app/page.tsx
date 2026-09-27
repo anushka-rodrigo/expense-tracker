@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { addTransaction, deleteTransaction } from './actions'
 import TransactionList from '@/components/TransactionList'
+import SpendingSummary from '@/components/SpendingSummary'
 
 export default async function Home() {
   const { data: transactions } = await supabase
@@ -65,6 +66,7 @@ export default async function Home() {
         </form>
 
         <TransactionList transactions={list} onDelete={deleteTransaction} />
+        <SpendingSummary />
       </div>
     </main>
   )
