@@ -33,7 +33,7 @@ export default function TransactionList({
                 t.type === 'income' ? 'text-[#7FB88F]' : 'text-[#C97B7B]'
               }`}
             >
-              {t.type === 'income' ? '+' : '-'}${Number(t.amount).toFixed(2)}
+              {t.type === 'income' ? '' : '-'}Rs. {Number(t.amount).toFixed(2)}
             </span>
             <button
               onClick={() => onDelete(t.id)}

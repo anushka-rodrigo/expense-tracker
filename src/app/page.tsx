@@ -18,11 +18,11 @@ export default async function Home() {
       <div className="mx-auto max-w-md">
         <p className="text-sm text-[#86858C] mb-1">Balance</p>
         <p className="text-5xl font-semibold tracking-tight mb-2 font-mono">
-          ${balance.toFixed(2)}
+          Rs. {balance.toFixed(2)}
         </p>
         <div className="flex gap-4 text-sm text-[#86858C] mb-8">
-          <span>In <span className="text-[#7FB88F] font-mono">${income.toFixed(2)}</span></span>
-          <span>Out <span className="text-[#C97B7B] font-mono">${expense.toFixed(2)}</span></span>
+          <span>In <span className="text-[#7FB88F] font-mono">Rs. {income.toFixed(2)}</span></span>
+          <span>Out <span className="text-[#C97B7B] font-mono">Rs. {expense.toFixed(2)}</span></span>
         </div>
 
         <form action={addTransaction} className="space-y-3 mb-10 border border-[#2A2A30] rounded-lg p-4">
