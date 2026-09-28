@@ -1,76 +1,55 @@
-import { supabase } from '@/lib/supabase'
-import { addTransaction, deleteTransaction } from './actions'
-import TransactionList from '@/components/TransactionList'
-import SpendingSummary from '@/components/SpendingSummary'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/auth/actions'
+import { currentMonth, shiftMonth, monthLabel, lastDayOfMonth } from '@/lib/dates'
+import type { Entry } from '@/lib/types'
+import EntryForm from '@/components/EntryForm'
+import Ledger from '@/components/Ledger'
 
-export default async function Home() {
-  const { data: transactions } = await supabase
-    .from('transactions')
-    .select('*')
-    .order('created_at', { ascending: false })
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>
+}) {
+  const { month } = await searchParams
+  const ym = month && /^\d{4}-(0[1-9]|1[0-2])$/.test(month) ? month : currentMonth()
+  const first = `${ym}-01`
+  const last = lastDayOfMonth(first)
 
-  const list = transactions ?? []
-  const income = list.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
-  const expense = list.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
-  const balance = income - expense
+  const supabase = await createClient()
+  const [{ data: { user } }, exp, inc] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from('expenses').select('*').gte('start_date', first).lte('start_date', last),
+    supabase.from('income').select('*').gte('start_date', first).lte('start_date', last),
+  ])
+
+  const entries: Entry[] = [
+    ...(exp.data ?? []).map((r) => ({ ...r, kind: 'expense' as const, amount: Number(r.amount) })),
+    ...(inc.data ?? []).map((r) => ({ ...r, kind: 'income' as const, description: null, amount: Number(r.amount) })),
+  ]
 
   return (
-    <main className="min-h-screen bg-[#131316] text-[#F2F1EE] px-6 py-10 sm:px-10">
-      <div className="mx-auto max-w-md">
-        <form action={logout} className="flex justify-end mb-4">
-          <button className="text-sm text-[#86858C] hover:text-[#F2F1EE]">Sign out</button>
-        </form>
-        <p className="text-sm text-[#86858C] mb-1">Balance</p>
-        <p className="text-5xl font-semibold tracking-tight mb-2 font-mono">
-          Rs. {balance.toFixed(2)}
-        </p>
-        <div className="flex gap-4 text-sm text-[#86858C] mb-8">
-          <span>In <span className="text-[#7FB88F] font-mono">Rs. {income.toFixed(2)}</span></span>
-          <span>Out <span className="text-[#C97B7B] font-mono">Rs. {expense.toFixed(2)}</span></span>
+    <main className="min-h-screen bg-[#131316] text-[#F2F1EE] px-5 py-8 sm:px-10">
+      <div className="mx-auto max-w-2xl">
+        <header className="flex items-center justify-between mb-8">
+          <div className="min-w-0">
+            <h1 className="text-lg font-semibold tracking-tight">Ultrix Expense Tracker</h1>
+            <p className="text-xs text-[#86858C] truncate">{user?.email}</p>
+          </div>
+          <form action={logout}>
+            <button className="text-sm text-[#86858C] hover:text-[#F2F1EE]">Sign out</button>
+          </form>
+        </header>
+
+        <EntryForm />
+
+        <div className="flex items-center justify-between mb-4">
+          <Link href={`/?month=${shiftMonth(ym, -1)}`} className="px-3 py-1 text-[#86858C] hover:text-[#F2F1EE]" aria-label="Previous month">‹</Link>
+          <h2 className="text-sm font-medium">{monthLabel(ym)}</h2>
+          <Link href={`/?month=${shiftMonth(ym, 1)}`} className="px-3 py-1 text-[#86858C] hover:text-[#F2F1EE]" aria-label="Next month">›</Link>
         </div>
 
-        <form action={addTransaction} className="space-y-3 mb-10 border border-[#2A2A30] rounded-lg p-4">
-          <div className="flex gap-2">
-            <input
-              name="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              required
-              className="flex-1 bg-[#1C1C21] border border-[#2A2A30] rounded-md px-3 py-2 text-sm font-mono placeholder:text-[#5A5A62] focus:outline-none focus:border-[#D4B483]"
-            />
-            <select
-              name="type"
-              defaultValue="expense"
-              className="bg-[#1C1C21] border border-[#2A2A30] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#D4B483]"
-            >
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
-          </div>
-          <input
-            name="category"
-            type="text"
-            placeholder="Category (optional)"
-            className="w-full bg-[#1C1C21] border border-[#2A2A30] rounded-md px-3 py-2 text-sm placeholder:text-[#5A5A62] focus:outline-none focus:border-[#D4B483]"
-          />
-          <input
-            name="note"
-            type="text"
-            placeholder="Note (optional)"
-            className="w-full bg-[#1C1C21] border border-[#2A2A30] rounded-md px-3 py-2 text-sm placeholder:text-[#5A5A62] focus:outline-none focus:border-[#D4B483]"
-          />
-          <button
-            type="submit"
-            className="w-full bg-[#D4B483] text-[#131316] font-medium rounded-md py-2 text-sm hover:opacity-90 transition-opacity"
-          >
-            Add transaction
-          </button>
-        </form>
-
-        <TransactionList transactions={list} onDelete={deleteTransaction} />
-        <SpendingSummary />
+        <Ledger entries={entries} />
       </div>
     </main>
   )
