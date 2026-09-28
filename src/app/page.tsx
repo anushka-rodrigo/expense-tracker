@@ -4,9 +4,13 @@ import { logout } from '@/app/auth/actions'
 import { currentMonth, shiftMonth, monthLabel, lastDayOfMonth } from '@/lib/dates'
 import { summarize } from '@/lib/summary'
 import type { Entry } from '@/lib/types'
-import EntryForm from '@/components/EntryForm'
+import EntryPanel from '@/components/EntryPanel'
 import Ledger from '@/components/Ledger'
 import MonthSummary from '@/components/MonthSummary'
+import InsightsCard from '@/components/InsightsCard'
+
+const arrow =
+  'flex h-9 w-9 items-center justify-center rounded-md border border-[#2A2A30] text-[#86858C] hover:text-[#F2F1EE]'
 
 export default async function Home({
   searchParams,
@@ -19,10 +23,15 @@ export default async function Home({
   const last = lastDayOfMonth(first)
 
   const supabase = await createClient()
-  const [{ data: { user } }, exp, inc] = await Promise.all([
+  const [{ data: { user } }, exp, inc, ins] = await Promise.all([
     supabase.auth.getUser(),
     supabase.from('expenses').select('*').gte('start_date', first).lte('start_date', last),
     supabase.from('income').select('*').gte('start_date', first).lte('start_date', last),
+    supabase
+      .from('monthly_insights')
+      .select('content, generated_at, income_total, expense_total')
+      .eq('month', first)
+      .maybeSingle(),
   ])
 
   const entries: Entry[] = [
@@ -32,8 +41,8 @@ export default async function Home({
   const summary = summarize(entries)
 
   return (
-    <main className="min-h-screen bg-[#131316] text-[#F2F1EE] px-5 py-8 sm:px-10">
-      <div className="mx-auto max-w-2xl">
+    <main className="min-h-screen bg-[#131316] text-[#F2F1EE] px-5 py-8 pb-28 sm:px-10 lg:pb-10">
+      <div className="mx-auto max-w-5xl">
         <header className="flex items-center justify-between mb-8">
           <div className="min-w-0">
             <h1 className="text-lg font-semibold tracking-tight">Ultrix Expense Tracker</h1>
@@ -44,21 +53,42 @@ export default async function Home({
           </form>
         </header>
 
-        <EntryForm />
+        <div className="lg:grid lg:grid-cols-[21rem_minmax(0,1fr)] lg:gap-8 lg:items-start">
+          <EntryPanel />
 
-        <div className="flex items-center justify-between mb-4">
-          <Link href={`/?month=${shiftMonth(ym, -1)}`} className="px-3 py-1 text-[#86858C] hover:text-[#F2F1EE]" aria-label="Previous month">‹</Link>
-          <h2 className="text-sm font-medium">{monthLabel(ym)}</h2>
-          <Link href={`/?month=${shiftMonth(ym, 1)}`} className="px-3 py-1 text-[#86858C] hover:text-[#F2F1EE]" aria-label="Next month">›</Link>
+          <div className="min-w-0">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-baseline gap-3">
+                <h2 className="text-xl font-semibold tracking-tight">{monthLabel(ym)}</h2>
+                {ym !== currentMonth() && (
+                  <Link href="/" className="text-xs text-[#D4B483]">This month</Link>
+                )}
+              </div>
+              <div className="flex gap-1.5">
+                <Link href={`/?month=${shiftMonth(ym, -1)}`} className={arrow} aria-label="Previous month">‹</Link>
+                <Link href={`/?month=${shiftMonth(ym, 1)}`} className={arrow} aria-label="Next month">›</Link>
+              </div>
+            </div>
+
+            <MonthSummary
+              summary={summary}
+              isCurrentMonth={ym === currentMonth()}
+              hasEntries={entries.length > 0}
+            />
+
+            {entries.length > 0 && (
+              <InsightsCard
+                key={ym}
+                month={ym}
+                initial={ins.data ?? null}
+                income={summary.income}
+                expense={summary.expense}
+              />
+            )}
+
+            <Ledger entries={entries} />
+          </div>
         </div>
-
-        <MonthSummary
-          summary={summary}
-          isCurrentMonth={ym === currentMonth()}
-          hasEntries={entries.length > 0}
-        />
-
-        <Ledger entries={entries} />
       </div>
     </main>
   )

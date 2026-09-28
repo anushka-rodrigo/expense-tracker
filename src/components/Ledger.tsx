@@ -6,7 +6,7 @@ export default function Ledger({ entries }: { entries: Entry[] }) {
   if (entries.length === 0) {
     return (
       <p className="text-sm text-[#86858C] text-center py-10">
-        Nothing recorded this month yet. Add your first entry above.
+        Nothing recorded this month yet. Use the Add entry panel to record your first one.
       </p>
     )
   }

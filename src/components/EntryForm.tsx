@@ -28,7 +28,7 @@ function Segment<T extends string>({
   )
 }
 
-export default function EntryForm() {
+export default function EntryForm({ onSaved }: { onSaved?: () => void }) {
   const [kind, setKind] = useState<'expense' | 'income'>('expense')
   const [mode, setMode] = useState<'single' | 'range'>('single')
   const [startDate, setStartDate] = useState('')
@@ -68,10 +68,11 @@ export default function EntryForm() {
     setDescription('')
     setAmount('')
     setEndDate('')
+    onSaved?.()
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3 border border-[#2A2A30] rounded-lg p-4 mb-8">
+    <form onSubmit={onSubmit} className="space-y-3">
       <Segment
         value={kind}
         onChange={setKind}
