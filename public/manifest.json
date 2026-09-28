@@ -1,13 +1,14 @@
 {
-  "name": "Expense Tracker",
-  "short_name": "Expenses",
-  "description": "Track daily income and expenses",
+  "name": "Ultrix Expense Tracker",
+  "short_name": "Ultrix",
+  "description": "Track daily income and expenses, with monthly AI insights",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#131316",
   "theme_color": "#131316",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

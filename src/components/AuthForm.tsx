@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 type Props = {
   mode: 'login' | 'signup'
@@ -15,7 +16,10 @@ export default function AuthForm({ mode, action, error, message }: Props) {
   return (
     <main className="min-h-screen bg-[#131316] text-[#F2F1EE] flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-semibold tracking-tight mb-1">Ultrix Expense Tracker</h1>
+        <div className="flex items-center gap-3 mb-1">
+          <Image src="/logo/ultrix-icon.svg" alt="" width={36} height={36} className="rounded-[8px]" />
+          <h1 className="text-2xl font-semibold tracking-tight">Ultrix Expense Tracker</h1>
+        </div>
         <p className="text-sm text-[#86858C] mb-8">
           {isLogin ? 'Log in to your account' : 'Create your account'}
         </p>

@@ -8,6 +8,7 @@ import EntryPanel from '@/components/EntryPanel'
 import Ledger from '@/components/Ledger'
 import MonthSummary from '@/components/MonthSummary'
 import InsightsCard from '@/components/InsightsCard'
+import Image from 'next/image'
 
 const arrow =
   'flex h-9 w-9 items-center justify-center rounded-md border border-[#2A2A30] text-[#86858C] hover:text-[#F2F1EE]'
@@ -45,7 +46,10 @@ export default async function Home({
       <div className="mx-auto max-w-5xl">
         <header className="flex items-center justify-between mb-8">
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold tracking-tight">Ultrix Expense Tracker</h1>
+            <div className="flex items-center gap-2.5">
+              <Image src="/logo/ultrix-icon.svg" alt="" width={28} height={28} className="rounded-[6px]" />
+              <h1 className="text-lg font-semibold tracking-tight">Ultrix Expense Tracker</h1>
+            </div>
             <p className="text-xs text-[#86858C] truncate">{user?.email}</p>
           </div>
           <form action={logout}>

@@ -1,4 +1,5 @@
 import type { Summary } from '@/lib/summary'
+import DownloadReportButton from './DownloadReportButton'
 
 const fmt = (n: number) =>
   Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -26,11 +27,7 @@ export default function MonthSummary({
           <span className="text-[10px] uppercase tracking-wider text-[#5A5A62]">
             {isCurrentMonth ? 'So far' : 'Final'}
           </span>
-          {reportHref && (
-            <a href={reportHref} download className="rounded-md border border-[#2A2A30] px-2.5 py-1 text-[11px] text-[#D4B483] hover:border-[#D4B483]">
-              Download PDF
-            </a>
-          )}
+          {reportHref && <DownloadReportButton href={reportHref} />}
         </div>
       </div>
       <p className={`text-3xl font-semibold font-mono tracking-tight mb-4 ${negative ? 'text-[#C97B7B]' : 'text-[#F2F1EE]'}`}>

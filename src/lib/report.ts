@@ -2,6 +2,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf
 import type { Entry } from './types'
 import type { Summary } from './summary'
 import { dayLabel, monthLabel } from './dates'
+import { LOGO_PNG_BASE64 } from './logoData'
 
 export type ReportInsight = {
   content: { summary: string; highlights: string[]; suggestions: string[] }
@@ -140,7 +141,10 @@ export async function buildReport(input: ReportInput): Promise<Uint8Array> {
   }
 
   // ---------- Header ----------
-  put('ULTRIX EXPENSE TRACKER', M, 9, bold, GOLD)
+  const logoImg = await pdf.embedPng(Uint8Array.from(atob(LOGO_PNG_BASE64), (c) => c.charCodeAt(0)))
+  const logoSize = 20
+  page.drawImage(logoImg, { x: M, y: y - logoSize + 7, width: logoSize, height: logoSize })
+  put('ULTRIX EXPENSE TRACKER', M + logoSize + 8, 9, bold, GOLD, y - 6)
   putRight(fit(`Prepared for ${email}`, font, 8.5, 300), M + W, 8.5, font, MUTED)
   y -= 26
   put('Monthly Report', M, 24, bold)
