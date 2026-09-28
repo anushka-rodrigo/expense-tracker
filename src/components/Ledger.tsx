@@ -1,8 +1,6 @@
 import type { Entry } from '@/lib/types'
 import { dayLabel } from '@/lib/dates'
-
-const fmt = (n: number) =>
-  n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+import EntryRow from './EntryRow'
 
 export default function Ledger({ entries }: { entries: Entry[] }) {
   if (entries.length === 0) {
@@ -38,22 +36,10 @@ export default function Ledger({ entries }: { entries: Entry[] }) {
             <p className="text-xs font-mono text-[#D4B483] leading-5 pt-px">
               {dayLabel(first.start_date, first.end_date)}
             </p>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2.5 min-w-0">
               {rows.map((e) => (
-                <li key={`${e.kind}-${e.id}`} className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm leading-5 break-words">{e.name}</p>
-                    {e.description && (
-                      <p className="text-xs text-[#86858C] break-words">{e.description}</p>
-                    )}
-                  </div>
-                  <p
-                    className={`text-sm font-mono whitespace-nowrap leading-5 ${
-                      e.kind === 'income' ? 'text-[#7FB88F]' : 'text-[#C97B7B]'
-                    }`}
-                  >
-                    {e.kind === 'income' ? '+' : '−'} {fmt(e.amount)}
-                  </p>
+                <li key={`${e.kind}-${e.id}`}>
+                  <EntryRow entry={e} />
                 </li>
               ))}
             </ul>
