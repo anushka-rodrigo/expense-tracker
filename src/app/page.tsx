@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { addTransaction, deleteTransaction } from './actions'
 import TransactionList from '@/components/TransactionList'
 import SpendingSummary from '@/components/SpendingSummary'
+import { logout } from '@/app/auth/actions'
 
 export default async function Home() {
   const { data: transactions } = await supabase
@@ -17,6 +18,9 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-[#131316] text-[#F2F1EE] px-6 py-10 sm:px-10">
       <div className="mx-auto max-w-md">
+        <form action={logout} className="flex justify-end mb-4">
+          <button className="text-sm text-[#86858C] hover:text-[#F2F1EE]">Sign out</button>
+        </form>
         <p className="text-sm text-[#86858C] mb-1">Balance</p>
         <p className="text-5xl font-semibold tracking-tight mb-2 font-mono">
           Rs. {balance.toFixed(2)}
