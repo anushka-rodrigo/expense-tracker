@@ -74,6 +74,7 @@ export default async function Home({
               summary={summary}
               isCurrentMonth={ym === currentMonth()}
               hasEntries={entries.length > 0}
+              reportHref={`/report?month=${ym}`}
             />
 
             {entries.length > 0 && (

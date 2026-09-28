@@ -7,10 +7,12 @@ export default function MonthSummary({
   summary,
   isCurrentMonth,
   hasEntries,
+  reportHref,
 }: {
   summary: Summary
   isCurrentMonth: boolean
   hasEntries: boolean
+  reportHref?: string
 }) {
   if (!hasEntries) return null
 
@@ -20,9 +22,16 @@ export default function MonthSummary({
     <section className="border border-[#2A2A30] rounded-lg p-4 mb-6">
       <div className="flex items-center justify-between mb-1">
         <p className="text-xs text-[#86858C]">Net balance</p>
-        <span className="text-[10px] uppercase tracking-wider text-[#5A5A62]">
-          {isCurrentMonth ? 'So far' : 'Final'}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] uppercase tracking-wider text-[#5A5A62]">
+            {isCurrentMonth ? 'So far' : 'Final'}
+          </span>
+          {reportHref && (
+            <a href={reportHref} download className="rounded-md border border-[#2A2A30] px-2.5 py-1 text-[11px] text-[#D4B483] hover:border-[#D4B483]">
+              Download PDF
+            </a>
+          )}
+        </div>
       </div>
       <p className={`text-3xl font-semibold font-mono tracking-tight mb-4 ${negative ? 'text-[#C97B7B]' : 'text-[#F2F1EE]'}`}>
         {negative ? '−' : ''}Rs. {fmt(summary.net)}
