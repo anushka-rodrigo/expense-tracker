@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { addEntry } from '@/app/actions'
-import { toISODate, lastDayOfMonth } from '@/lib/dates'
+import { toISODate } from '@/lib/dates'
+import EndDayPicker from './EndDayPicker'
 
 const field =
   'w-full bg-[#1C1C21] border border-[#2A2A30] rounded-md px-3 py-2.5 text-sm placeholder:text-[#5A5A62] focus:outline-none focus:border-[#D4B483] [color-scheme:dark]'
@@ -43,7 +44,7 @@ export default function EntryForm() {
 
   function changeStart(v: string) {
     setStartDate(v)
-    if (endDate && (endDate < v || endDate.slice(0, 7) !== v.slice(0, 7))) setEndDate('')
+    if (endDate && (endDate <= v || endDate.slice(0, 7) !== v.slice(0, 7))) setEndDate('')
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -89,16 +90,8 @@ export default function EntryForm() {
         </div>
         {mode === 'range' && (
           <div>
-            <label className="block text-xs text-[#86858C] mb-1">To (same month)</label>
-            <input
-              type="date"
-              required
-              value={endDate}
-              min={startDate || undefined}
-              max={startDate ? lastDayOfMonth(startDate) : undefined}
-              onChange={(e) => setEndDate(e.target.value)}
-              className={field}
-            />
+            <label className="block text-xs text-[#86858C] mb-1">To</label>
+            <EndDayPicker startDate={startDate} value={endDate} onChange={setEndDate} className={field} />
           </div>
         )}
       </div>

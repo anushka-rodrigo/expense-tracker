@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { updateEntry, deleteEntry } from '@/app/actions'
-import { lastDayOfMonth } from '@/lib/dates'
+import EndDayPicker from './EndDayPicker'
 import type { Entry } from '@/lib/types'
 
 const fmt = (n: number) =>
@@ -35,7 +35,7 @@ export default function EntryRow({ entry }: { entry: Entry }) {
 
   function changeStart(v: string) {
     setStartDate(v)
-    if (endDate && (endDate < v || endDate.slice(0, 7) !== v.slice(0, 7))) setEndDate('')
+    if (endDate && (endDate <= v || endDate.slice(0, 7) !== v.slice(0, 7))) setEndDate('')
   }
 
   async function save(e: React.FormEvent) {
@@ -77,15 +77,7 @@ export default function EntryRow({ entry }: { entry: Entry }) {
         <div className={isRange ? 'grid grid-cols-2 gap-2' : ''}>
           <input type="date" required value={startDate} onChange={(e) => changeStart(e.target.value)} className={field} />
           {isRange && (
-            <input
-              type="date"
-              required
-              value={endDate}
-              min={startDate || undefined}
-              max={startDate ? lastDayOfMonth(startDate) : undefined}
-              onChange={(e) => setEndDate(e.target.value)}
-              className={field}
-            />
+            <EndDayPicker startDate={startDate} value={endDate} onChange={setEndDate} className={field} />
           )}
         </div>
 

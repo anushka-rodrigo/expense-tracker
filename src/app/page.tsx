@@ -2,9 +2,11 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/auth/actions'
 import { currentMonth, shiftMonth, monthLabel, lastDayOfMonth } from '@/lib/dates'
+import { summarize } from '@/lib/summary'
 import type { Entry } from '@/lib/types'
 import EntryForm from '@/components/EntryForm'
 import Ledger from '@/components/Ledger'
+import MonthSummary from '@/components/MonthSummary'
 
 export default async function Home({
   searchParams,
@@ -27,6 +29,7 @@ export default async function Home({
     ...(exp.data ?? []).map((r) => ({ ...r, kind: 'expense' as const, amount: Number(r.amount) })),
     ...(inc.data ?? []).map((r) => ({ ...r, kind: 'income' as const, description: null, amount: Number(r.amount) })),
   ]
+  const summary = summarize(entries)
 
   return (
     <main className="min-h-screen bg-[#131316] text-[#F2F1EE] px-5 py-8 sm:px-10">
@@ -48,6 +51,12 @@ export default async function Home({
           <h2 className="text-sm font-medium">{monthLabel(ym)}</h2>
           <Link href={`/?month=${shiftMonth(ym, 1)}`} className="px-3 py-1 text-[#86858C] hover:text-[#F2F1EE]" aria-label="Next month">›</Link>
         </div>
+
+        <MonthSummary
+          summary={summary}
+          isCurrentMonth={ym === currentMonth()}
+          hasEntries={entries.length > 0}
+        />
 
         <Ledger entries={entries} />
       </div>
