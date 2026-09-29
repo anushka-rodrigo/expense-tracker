@@ -25,7 +25,7 @@ export async function proxy(request: NextRequest) {
   const isAuthed = !!data?.claims
   const path = request.nextUrl.pathname
   const isAuthPage = path === '/login' || path === '/signup'
-  const isPublic = isAuthPage || path.startsWith('/auth')
+  const isPublic = isAuthPage || path.startsWith('/auth') || path === '/offline'
 
   if (!isAuthed && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url))

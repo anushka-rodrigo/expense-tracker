@@ -11,6 +11,8 @@ const json = (body: unknown, status = 200) =>
     headers: { ...CORS, 'Content-Type': 'application/json' },
   })
 
+const DAILY_LIMIT = 8
+
 const pad = (n: number) => String(n).padStart(2, '0')
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
   'August', 'September', 'October', 'November', 'December']
@@ -28,6 +30,8 @@ const label = (ym: string) => {
   const [y, m] = ym.split('-').map(Number)
   return `${MONTHS[m - 1]} ${y}`
 }
+const colomboToday = () =>
+  new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' })
 
 type Row = { name: string; amount: number | string }
 
@@ -74,6 +78,28 @@ async function loadMonth(supabase: any, ym: string) {
   }
 }
 
+// deno-lint-ignore no-explicit-any
+async function checkAndIncrementUsage(adminClient: any, userId: string) {
+  const day = colomboToday()
+  const { data: existing, error: readErr } = await adminClient
+    .from('ai_usage')
+    .select('count')
+    .eq('user_id', userId)
+    .eq('day', day)
+    .maybeSingle()
+  if (readErr) throw new Error('Usage check failed')
+
+  const current = existing?.count ?? 0
+  if (current >= DAILY_LIMIT) return false
+
+  const { error: writeErr } = await adminClient
+    .from('ai_usage')
+    .upsert({ user_id: userId, day, count: current + 1 }, { onConflict: 'user_id,day' })
+  if (writeErr) throw new Error('Usage update failed')
+
+  return true
+}
+
 const SYSTEM = `You are a friendly, practical personal-finance coach reviewing one person's monthly income and expense summary.
 The input is JSON. All amounts are in Sri Lankan rupees (Rs.).
 Rules:
@@ -91,7 +117,6 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
-  // 1. Who is calling? Verify the login token ourselves.
   const authHeader = req.headers.get('Authorization')
   if (!authHeader) return json({ error: 'Not logged in' }, 401)
 
@@ -103,7 +128,13 @@ Deno.serve(async (req) => {
   const { data: { user }, error: userErr } = await supabase.auth.getUser()
   if (userErr || !user) return json({ error: 'Not logged in' }, 401)
 
-  // 2. Validate input and config
+  // Separate client with the service-role key, used only for the usage table,
+  // so a user can never reset their own counter through their normal session.
+  const adminClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  )
+
   let month = ''
   try {
     month = (await req.json()).month
@@ -115,7 +146,6 @@ Deno.serve(async (req) => {
   if (!key || !model) return json({ error: 'AI is not configured yet.' }, 500)
 
   try {
-    // 3. Read this user's data (RLS applies, so only their rows come back)
     const current = await loadMonth(supabase, month)
     if (current.entries === 0) return json({ error: 'Add some entries for this month first.' }, 400)
 
@@ -126,7 +156,6 @@ Deno.serve(async (req) => {
       .eq('month', first)
       .maybeSingle()
 
-    // Nothing changed and it was generated seconds ago: reuse it, save quota
     if (
       existing &&
       Date.now() - new Date(existing.generated_at).getTime() < 30_000 &&
@@ -136,8 +165,15 @@ Deno.serve(async (req) => {
       return json({ insight: existing })
     }
 
-    // 4. Build the prompt data
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' })
+    const allowed = await checkAndIncrementUsage(adminClient, user.id)
+    if (!allowed) {
+      return json(
+        { error: `You've reached today's limit of ${DAILY_LIMIT} AI generations. Try again tomorrow.` },
+        429,
+      )
+    }
+
+    const today = colomboToday()
     const currentYm = today.slice(0, 7)
     const daysInMonth = lastDay(month)
     const daysElapsed = month === currentYm ? Number(today.slice(8, 10)) : daysInMonth
@@ -165,7 +201,6 @@ Deno.serve(async (req) => {
         : null,
     }
 
-    // 5. Ask Gemini
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
@@ -217,7 +252,6 @@ Deno.serve(async (req) => {
       return json({ error: 'The AI returned an unexpected answer. Please try again.' }, 502)
     }
 
-    // 6. Save and return
     const row = {
       user_id: user.id,
       month: first,

@@ -102,7 +102,7 @@ export default function EntryForm({ onSaved }: { onSaved?: () => void }) {
         onChange={(e) => setName(e.target.value)}
         required
         maxLength={100}
-        placeholder={kind === 'expense' ? 'Expense (e.g. Food, Travel)' : 'Income (e.g. Class fee, Family)'}
+        placeholder={kind === 'expense' ? 'Expense (e.g. Food, Travel)' : 'Income (e.g. Occupation, Given by Family)'}
         className={field}
       />
       {kind === 'expense' && (
