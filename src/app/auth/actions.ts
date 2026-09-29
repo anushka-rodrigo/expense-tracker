@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -32,6 +33,28 @@ export async function signup(formData: FormData) {
 
   if (data.session) redirect('/') // email confirmation off
   redirect('/login?message=Check your email to confirm your account') // confirmation on
+}
+
+export async function deleteAccount(password: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user?.email) return { error: 'Your session has expired. Please log in again.' }
+
+  // Re-check the password so a logged-in device can't be used to delete the account by accident
+  const { error: pwError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password,
+  })
+  if (pwError) return { error: 'Incorrect password.' }
+
+  const admin = createAdminClient()
+  const { error: delError } = await admin.auth.admin.deleteUser(user.id)
+  if (delError) return { error: 'Could not delete your account. Please try again.' }
+
+  await supabase.auth.signOut()
+  redirect('/login?message=Your account and all its data have been deleted.')
 }
 
 export async function logout() {

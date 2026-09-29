@@ -52,9 +52,7 @@ export default async function Home({
             </div>
             <p className="text-xs text-[#86858C] truncate">{user?.email}</p>
           </div>
-          <form action={logout}>
-            <button className="text-sm text-[#86858C] hover:text-[#F2F1EE]">Sign out</button>
-          </form>
+          <Link href="/account" className="text-sm text-[#86858C] hover:text-[#F2F1EE]">Account</Link>
         </header>
 
         <div className="lg:grid lg:grid-cols-[21rem_minmax(0,1fr)] lg:gap-8 lg:items-start">
